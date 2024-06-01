@@ -4,7 +4,6 @@
 typedef struct _rwrlock_t {
     sem_t readlock;
     sem_t writelock;
-    pthread_mutex_t mutex;
     int readers;
 
 } rwrlock_t;
@@ -27,23 +26,17 @@ void rwrlock_release_writelock(rwrlock_t *rwr){
 }
 void rwrlock_acquire_readlock(rwrlock_t *rwr){
     sem_wait(&rwr->readlock); 
-    pthread_mutex_lock(&rwr->mutex);  // readers 변수를 보호하기 위해 mutex 사용
-
     rwr->readers++;
     if(rwr->readers == 1){ // 여태까지 접근한 reader가 없었다.
         sem_wait(&rwr->writelock);
     }
-    pthread_mutex_unlock(&rwr->mutex);
-
     sem_post(&rwr->readlock);
 }
 void rwrlock_release_readlock(rwrlock_t *rwr){
     sem_wait(&rwr->readlock);
-    pthread_mutex_lock(&rwr->mutex);
     rwr->readers--;
     if(rwr->readers == 0){
         sem_post(&rwr->writelock);
     }
-    pthread_mutex_unlock(&rwr->mutex);
     sem_post(&rwr->readlock);
 }
