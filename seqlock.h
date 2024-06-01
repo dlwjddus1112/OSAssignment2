@@ -1,3 +1,4 @@
+#include <semaphore.h>
 typedef struct _seqlock_t {
     int counter;
     sem_t readlock;
