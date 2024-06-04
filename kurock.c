@@ -131,7 +131,7 @@ void* writer(void* args){
 
         clock_gettime(CLOCK_MONOTONIC, &current); // 현재 시간 구하기
         cnt++;
-        usleep(period); // period는 1000000 / 5 = 200000 , 0.2초 후에 작업 다시 수행
+        usleep(period); // period는 1000000 / 5 = 200000 , 0.2초 후에 작업 다시 수행, 읽기/쓰기 작업수행 주기를 나타냄. 
     } while (timespec_cmp(deadline, current) > 0); // deadline이 될때까지 반복. 
     
     
