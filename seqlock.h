@@ -14,18 +14,18 @@ void seqlock_init(seqlock_t *seq){
 
 void seqlock_write_lock(seqlock_t *seq){
     pthread_mutex_lock(&seq->lock);
-    seq->counter++; // 홀수로 설정
+    seq->counter++; 
 }
 
 void seqlock_write_unlock(seqlock_t *seq){
-    seq->counter++; // 짝수로 설정
+    seq->counter++; 
     pthread_mutex_unlock(&seq->lock);
 }
 
 unsigned seqlock_read_begin(seqlock_t *seq){
     unsigned cnt;
     do {
-        cnt = seq->counter; // atomic read
+        cnt = seq->counter; 
     } while (cnt & 1); // 홀수면 쓰기 작업 중이므로 반복
     return cnt;
 }
