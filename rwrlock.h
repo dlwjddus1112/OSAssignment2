@@ -24,15 +24,15 @@ void rwrlock_acquire_writelock(rwrlock_t *rwr){
 void rwrlock_release_writelock(rwrlock_t *rwr){
     sem_post(&rwr->writelock);
 }
-void rwrlock_acquire_lock(rwrlock_t *rwr){
+void rwrlock_acquire_readlock(rwrlock_t *rwr){
     sem_wait(&rwr->lock); 
     rwr->readers++;
-    if(rwr->readers == 1){ // 여태까지 접근한 reader가 없었다.
+    if(rwr->readers == 1){ 
         sem_wait(&rwr->writelock);
     }
     sem_post(&rwr->lock);
 }
-void rwrlock_release_lock(rwrlock_t *rwr){
+void rwrlock_release_readlock(rwrlock_t *rwr){
     sem_wait(&rwr->lock);
     rwr->readers--;
     if(rwr->readers == 0){

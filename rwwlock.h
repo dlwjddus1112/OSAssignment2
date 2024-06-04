@@ -32,7 +32,7 @@ void rwwlock_acquire_writelock(rwwlock_t *rww) {
 void rwwlock_release_writelock(rwwlock_t *rww) {
     pthread_mutex_lock(&rww->lock);
     rww->writer_active = false;
-    pthread_cond_broadcast(&rww->cond); // 깨우기 위해 broadcast 사용
+    pthread_cond_broadcast(&rww->cond);
     pthread_mutex_unlock(&rww->lock);
 }
 
@@ -42,14 +42,14 @@ void rwwlock_acquire_readlock(rwwlock_t *rww) {
         pthread_cond_wait(&rww->cond, &rww->lock);
     }
     rww->readers++;
-    // pthread_mutex_unlock(&rww->lock);
+    pthread_mutex_unlock(&rww->lock);
 }
 
 void rwwlock_release_readlock(rwwlock_t *rww) {
-    // pthread_mutex_lock(&rww->lock);
+    pthread_mutex_lock(&rww->lock);
     rww->readers--;
     if (rww->readers == 0) {
-        pthread_cond_signal(&rww->cond); // 마지막 독자만 깨움
+        pthread_cond_signal(&rww->cond); 
     }
     pthread_mutex_unlock(&rww->lock);
 }

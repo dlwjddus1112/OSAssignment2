@@ -15,7 +15,7 @@ void seqlock_init(seqlock_t *seq){
 void seqlock_write_lock(seqlock_t *seq){
     pthread_mutex_lock(&seq->lock);
     seq->counter++; 
-}
+} 
 
 void seqlock_write_unlock(seqlock_t *seq){
     seq->counter++; 
@@ -26,11 +26,10 @@ unsigned seqlock_read_begin(seqlock_t *seq){
     unsigned cnt;
     do {
         cnt = seq->counter; 
-    } while (cnt & 1); // 홀수면 쓰기 작업 중이므로 반복
+    } while (cnt & 1); 
     return cnt;
 }
 
 bool seqlock_read_retry(seqlock_t *seq, unsigned cnt){
-    // 카운터가 변경되었는지 확인
     return seq->counter != cnt;
 }
