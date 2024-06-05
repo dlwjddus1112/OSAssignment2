@@ -10,11 +10,10 @@
 #include "rwwlock.h"
 #include "rwrlock.h"
 
-
-
-#define STRING_LEN  64
 unsigned long long writer_overhead = 0;
 unsigned long long reader_overhead = 0;
+
+#define STRING_LEN  64
 
 typedef enum locks{
     rwr, // reader
@@ -87,15 +86,17 @@ static inline int timespec_cmp (struct timespec a, struct timespec b){
 
 
 void writer_ops(){
-    
     struct timespec start, end;
     clock_gettime(CLOCK_MONOTONIC, &start);
+
     char alph = glob_counter % 26 + 'a';
     glob_counter++;
-    for(int i = 0; i < STRING_LEN; i++)
-        glob_string[i] =  alph;
+    for (int i = 0; i < STRING_LEN; i++)
+        glob_string[i] = alph;
+
     clock_gettime(CLOCK_MONOTONIC, &end);
     writer_overhead += (end.tv_sec - start.tv_sec) * 1000000000ULL + (end.tv_nsec - start.tv_nsec);
+   
 }
 void w_rww_lock_routine(){
     rwwlock_acquire_writelock((rwwlock_t*)ku_lock);
@@ -148,7 +149,6 @@ void* writer(void* args){
 }
 
 struct reader_view reader_ops(){
-
     struct timespec start, end;
     struct reader_view view;
     
@@ -161,6 +161,9 @@ struct reader_view reader_ops(){
 
     clock_gettime(CLOCK_MONOTONIC, &end);
     reader_overhead += (end.tv_sec - start.tv_sec) * 1000000000ULL + (end.tv_nsec - start.tv_nsec);
+
+    return view;
+    
 
     return view;
 }
