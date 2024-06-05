@@ -338,6 +338,11 @@ void stats(int duration, struct results res){
 
     printf("Wrtier throughput: %f ops/sec\n", w_th);
     printf("Reader throughput: %f ops/sec\n", r_th);
+    printf("\n");
+    printf("Total writer overhead time: %llu ns\n", writer_overhead);
+    printf("Total reader overhead time: %llu ns\n", reader_overhead);
+    printf("Average writer overhead time: %llu ns\n", writer_overhead / res.wcnt);
+    printf("Average reader overhead time: %llu ns\n", reader_overhead / res.rcnt);
 
 }
 
