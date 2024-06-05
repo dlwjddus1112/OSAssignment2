@@ -13,6 +13,8 @@
 
 
 #define STRING_LEN  64
+unsigned long long writer_overhead = 0;
+unsigned long long reader_overhead = 0;
 
 typedef enum locks{
     rwr, // reader
@@ -51,6 +53,8 @@ struct linked_list{
 struct results{
     unsigned long rcnt;
     unsigned long wcnt;
+    
+    
 };
 
 struct linked_list* insert(struct linked_list* node, struct reader_view value){
@@ -83,10 +87,15 @@ static inline int timespec_cmp (struct timespec a, struct timespec b){
 
 
 void writer_ops(){
+    
+    struct timespec start, end;
+    clock_gettime(CLOCK_MONOTONIC, &start);
     char alph = glob_counter % 26 + 'a';
     glob_counter++;
     for(int i = 0; i < STRING_LEN; i++)
         glob_string[i] =  alph;
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    writer_overhead += (end.tv_sec - start.tv_sec) * 1000000000ULL + (end.tv_nsec - start.tv_nsec);
 }
 void w_rww_lock_routine(){
     rwwlock_acquire_writelock((rwwlock_t*)ku_lock);
@@ -140,11 +149,18 @@ void* writer(void* args){
 
 struct reader_view reader_ops(){
 
+    struct timespec start, end;
     struct reader_view view;
-    view.counter = glob_counter; // 글로벌 카운터의 값을 저장
-    for(int i = 0; i < STRING_LEN; i++)
-        view.string[i] = glob_string[i];  // glob_String에 저장되어있는 값을 복사
+    
+    clock_gettime(CLOCK_MONOTONIC, &start);
+
+    view.counter = glob_counter;
+    for (int i = 0; i < STRING_LEN; i++)
+        view.string[i] = glob_string[i];
     view.string[STRING_LEN] = '\0';
+
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    reader_overhead += (end.tv_sec - start.tv_sec) * 1000000000ULL + (end.tv_nsec - start.tv_nsec);
 
     return view;
 }
@@ -154,12 +170,13 @@ struct linked_list* r_seq_lock_routine(struct linked_list* list){
     struct reader_view view;
     struct linked_list* current;
     unsigned cnt;
+ 
     do{
         cnt = seqlock_read_begin((seqlock_t *)ku_lock);
         view = reader_ops();
     }while(seqlock_read_retry((seqlock_t*)ku_lock, cnt));
-
-    current = insert(list,view);
+    
+    
     return current;
 }
 
@@ -167,11 +184,11 @@ struct linked_list* r_rww_lock_routine(struct linked_list* list){
 
     struct reader_view view;
     struct linked_list* current;
-
+    //
     rwwlock_acquire_readlock((rwwlock_t*)ku_lock);
     view = reader_ops();
     rwwlock_release_readlock((rwwlock_t*)ku_lock);
-
+    //
     current = insert(list,view); 
     return current;
 }
@@ -179,11 +196,11 @@ struct linked_list* r_rwr_lock_routine(struct linked_list* list){
 
     struct reader_view view; // view에는 counter, string 배열이 들어있다.
     struct linked_list* current; 
-
+    //
     rwrlock_acquire_readlock((rwrlock_t*)ku_lock);
     view = reader_ops();
     rwrlock_release_readlock((rwrlock_t*)ku_lock);
-
+    //
     current = insert(list,view); // list의 next가 current가 되고, current의 reader_view는 view가 된다. 
     return current;
 }
@@ -312,7 +329,6 @@ void stats(int duration, struct results res){
     
     double w_th = (double) res.wcnt / duration;
     double r_th = (double) res.rcnt / duration;
-
     printf("Local writer counter total sum : %ld\n", res.wcnt);
     printf("Local reader counter total sum : %ld\n", res.rcnt);
 

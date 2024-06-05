@@ -24,6 +24,7 @@ void seqlock_write_unlock(seqlock_t *seq){
 
 unsigned seqlock_read_begin(seqlock_t *seq){
     unsigned cnt;
+    
     do {
         cnt = seq->counter; 
     } while (cnt & 1); 
